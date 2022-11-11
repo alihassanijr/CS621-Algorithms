@@ -1,16 +1,82 @@
 #include <iostream>
 #include <string>
 #include <math.h>
-#include <limits>
 
-typedef std::numeric_limits< double > dbl;
 using namespace std;
 
+class Solution {
+    public:
+        double val;
+        int i, j, k;
+        Solution()
+        {
+            val = double(0);
+            i = -1;
+            j = -1;
+            k = -1;
+        }
+        Solution(int _val)
+        {
+            val = double(_val);
+            i = -1;
+            j = -1;
+            k = -1;
+        }
+        Solution(float _val)
+        {
+            val = double(_val);
+            i = -1;
+            j = -1;
+            k = -1;
+        }
+        Solution(double _val)
+        {
+            val = _val;
+            i = -1;
+            j = -1;
+            k = -1;
+        }
+        Solution(double _val, int _i, int _j, int _k)
+        {
+            val = _val;
+            i = _i;
+            j = _j;
+            k = _k;
+        }
+        void operator = (const Solution& c){
+            val = c.val;
+            i = c.i;
+            j = c.j;
+            k = c.k;
+        }
+        Solution operator * (const Solution& c){
+            Solution r(val*c.val, i, j, k);
+            return r;
+        }
+        bool operator== (const Solution& c){
+            return val == c.val;
+        }
+        bool operator!= (const Solution& c){
+            return val != c.val;
+        }
+        bool operator<= (const Solution& c){
+            return val <= c.val;
+        }
+        bool operator>= (const Solution& c){
+            return val >= c.val;
+        }
+        bool operator< (const Solution& c){
+            return val < c.val;
+        }
+        bool operator> (const Solution& c){
+            return val > c.val;
+        }
+};
 
 class Problem
 {
     public:
-        double* data;
+        Solution* data;
         int n, budget;
         int sz = 0;
         int* cost;
@@ -21,9 +87,9 @@ class Problem
             cost = _cost;
             rel = _rel;
             sz = floor(n * (n + 1) / 2) * budget;
-            data = new double[sz];
-            for (int i=0; i < sz; ++i)
-                data[i] = 0.0;
+            data = new Solution[sz];
+            //for (int i=0; i < sz; ++i)
+            //    data[i] = Solution(0.0);
             init();
         }
         int get_index(int i, int j, int k){
@@ -45,31 +111,38 @@ class Problem
                 }
             }
         }
-        void print(int start, int end){
-            for (int k=start; k <= end; k++)
-            {
-                cout << k << endl;
-                cout << endl;
-                for (int i=1; i <= n; i++)
-                {
-                    for (int j=1; j <= n; j++)
-                        cout << get(i, j, k) << " ";
-                    cout << endl;
-                }
-                cout << endl;
-                cout << endl;
+        //void print(int start, int end){
+        //    for (int k=start; k <= end; k++)
+        //    {
+        //        cout << k << endl;
+        //        cout << endl;
+        //        for (int i=1; i <= n; i++)
+        //        {
+        //            for (int j=1; j <= n; j++)
+        //                cout << get(i, j, k) << " ";
+        //            cout << endl;
+        //        }
+        //        cout << endl;
+        //        cout << endl;
 
-            }
-        }
-        double get(int i, int j, int k){
+        //    }
+        //}
+        Solution get(int i, int j, int k){
             int idx = get_index(i, j, k);
             if (idx < 0 || idx >= sz)
-                return double(0.0);
+                return Solution(0.0);
             if ((i == j && k < cost[i]) || (i < j && k < cost[i]+cost[j]))
-                return double(0.0);
+                return Solution(0.0);
             return data[idx];
         }
         bool set(int i, int j, int k, double val){
+            int idx = get_index(i, j, k);
+            if (idx < 0 || idx >= sz)
+                return false;
+            data[idx] = Solution(val, i, j, k);
+            return true;
+        }
+        bool set(int i, int j, int k, Solution val){
             int idx = get_index(i, j, k);
             if (idx < 0 || idx >= sz)
                 return false;
@@ -85,7 +158,7 @@ void print_solution_head(int budget, int n){
 }
 
 int main(){
-    cout.precision(dbl::max_digits10);
+    cout.precision(14);
     //cout << "Machine Reliability Problem" << endl;
     int budget, n;
     cin >> budget;
@@ -110,11 +183,12 @@ int main(){
             int j = i + st;
             if (j <= n){
                 for (int k=cost[i-1]; k <= budget; ++k){
-                    double m = 0;
+                    Solution m(0);
                     for (int b=1; b <= k; ++b){
-                        double a = p.get(i, i, b) * p.get(i+1, j, k-b);
-                        double aa = p.get(j, j, b) * p.get(i, j-1, k-b);
-                        double c = max(a, aa);
+                        Solution c = p.get(i, i, b) * p.get(i+1, j, k-b);
+                        c.i = i;
+                        c.j = i;
+                        c.k = b;
                         if (c > m)
                             m = c;
                     }
@@ -129,7 +203,18 @@ int main(){
 
     cout << "Iterated Version:" << endl;
     cout << "Maximum reliability: ";
-    cout << p.get(1, n, budget);
+    cout << p.get(1, n, budget).val;
+    int _bud = budget;
+    int* copies = new int[n];
+    for (int i=1; i <= n; i++){
+        int _curr_bud = p.get(i, n, _bud).k;
+        copies[i-1] = floor(_curr_bud / cost[i-1]);
+        _bud -= _curr_bud;
+    }
+    for (int i=n; i > 0; i--){
+        cout << endl;
+        cout << copies[i-1] << " copies of machine " << i << " of cost " << cost[i-1];
+    }
     cout << endl;
     return 0;
 }
