@@ -18,7 +18,7 @@ class Problem
             cost = _cost;
             rel = _rel;
             sz = floor(n * (n + 1) / 2) * budget;
-            data = new double(sz);
+            data = new double[sz];
             for (int i=0; i < sz; ++i)
                 data[i] = 0.0;
             init();
@@ -76,8 +76,8 @@ int main(){
     }
     int* cost;
     float* rel;
-    cost = new int(n);
-    rel = new float(n);
+    cost = new int[n];
+    rel = new float[n];
     for (int i=0; i < n; ++i){
         cin >> cost[i] >> rel[i];
     }
@@ -85,16 +85,25 @@ int main(){
     Problem p(n, budget, cost, rel);
 
 
-    //for (int i=1; i <= n; ++i){
-    //    for (int j=i+1; j <= n; ++j){
-    //        for (int k=cost[i]+cost[j]-1; k <= budget; ++k){
-    //            float m = 0;
-    //            for (int b=0; b < k; ++b)
-    //                
-    //        }
-    //    }
-    //}
+    for (int i=1; i <= n; ++i){
+        for (int j=i+1; j <= n; ++j){
+            for (int k=cost[i]; k <= budget; ++k){
+                double m = 0;
+                for (int b=1; b <= k; ++b){
+                    double a = p.get(i, i, b) * p.get(i+1, j, k-b);
+                    double aa = p.get(j, j, b) * p.get(i, j-1, k-b);
+                    double c = max(a, aa);
+                    if (c > m)
+                        m = c;
+                }
+                p.set(i, j, k, m);
+            }
+        }
+    }
 
     print_solution_head(budget, n);
+
+    cout << "Iterated Version:" << endl;
+    cout << "Maximum reliability: " << p.get(1, n, budget) << endl;
     return 0;
 }
