@@ -7,50 +7,38 @@ using namespace std;
 class Solution {
     public:
         double val;
-        int i, j, k;
+        int k;
         Solution()
         {
             val = double(0);
-            i = -1;
-            j = -1;
             k = -1;
         }
         Solution(int _val)
         {
             val = double(_val);
-            i = -1;
-            j = -1;
             k = -1;
         }
         Solution(float _val)
         {
             val = double(_val);
-            i = -1;
-            j = -1;
             k = -1;
         }
         Solution(double _val)
         {
             val = _val;
-            i = -1;
-            j = -1;
             k = -1;
         }
-        Solution(double _val, int _i, int _j, int _k)
+        Solution(double _val, int _k)
         {
             val = _val;
-            i = _i;
-            j = _j;
             k = _k;
         }
         void operator = (const Solution& c){
             val = c.val;
-            i = c.i;
-            j = c.j;
             k = c.k;
         }
         Solution operator * (const Solution& c){
-            Solution r(val*c.val, i, j, k);
+            Solution r(val*c.val, k);
             return r;
         }
         bool operator== (const Solution& c){
@@ -103,35 +91,22 @@ class Problem
         }
         void init()
         {
-            for (int i=1; i <= n; ++i){
+            //for (int i=1; i <= n; ++i){
+            int i = n;
                 int c = cost[i-1];
-                for (int b=c; b <= budget; ++b){
+                for (int b=c; b <= budget; b+=c){
                     int r = floor(b / c);
-                    set(i, i, b, 1 - pow((1-rel[i-1]), r));
+                    double tr = 1 - pow((1-rel[i-1]), r);
+                    //for (int bb=b; bb < b+c; bb++)
+                    set(i, i, b, tr);
                 }
-            }
+            //}
         }
-        //void print(int start, int end){
-        //    for (int k=start; k <= end; k++)
-        //    {
-        //        cout << k << endl;
-        //        cout << endl;
-        //        for (int i=1; i <= n; i++)
-        //        {
-        //            for (int j=1; j <= n; j++)
-        //                cout << get(i, j, k) << " ";
-        //            cout << endl;
-        //        }
-        //        cout << endl;
-        //        cout << endl;
-
-        //    }
-        //}
         Solution get(int i, int j, int k){
             int idx = get_index(i, j, k);
             if (idx < 0 || idx >= sz)
                 return Solution(0.0);
-            if ((i == j && k < cost[i]) || (i < j && k < cost[i]+cost[j]))
+            if ((i == j && k < cost[i-1]) || (i < j && k < cost[i-1]+cost[j-1]))
                 return Solution(0.0);
             return data[idx];
         }
@@ -139,7 +114,7 @@ class Problem
             int idx = get_index(i, j, k);
             if (idx < 0 || idx >= sz)
                 return false;
-            data[idx] = Solution(val, i, j, k);
+            data[idx] = Solution(val, k);
             return true;
         }
         bool set(int i, int j, int k, Solution val){
@@ -178,25 +153,34 @@ int main(){
     Problem p(n, budget, cost, rel);
 
 
-    for (int st=1; st <= n; ++st){
-        for (int i=1; i <= n; ++i){
-            int j = i + st;
-            if (j <= n){
-                for (int k=cost[i-1]; k <= budget; ++k){
-                    Solution m(0);
-                    for (int b=1; b <= k; ++b){
-                        Solution c = p.get(i, i, b) * p.get(i+1, j, k-b);
-                        c.i = i;
-                        c.j = i;
-                        c.k = b;
-                        if (c > m)
-                            m = c;
-                    }
-                    p.set(i, j, k, m);
+    int tmp_budget = cost[n-1];
+
+    //for (int st=1; st <= n; ++st){
+    for (int i=n-1; i > 0; --i){
+        //int j = i + st;
+        int c = cost[i-1];
+        tmp_budget += c;
+        //if (j <= n){
+        for (int k=tmp_budget; k <= budget; ++k){
+            Solution m(0);
+            for (int b=c; b <= k; b+=c){
+                Solution pa = p.get(i, i, b);
+                if (pa.val == 0){
+                    int r = floor(b / c);
+                    pa.val = 1 - pow((1-rel[i-1]), r);
                 }
+                //for (int bb=b; bb < b+c; bb++){
+                    p.set(i, i, b, pa);
+                    Solution s(pa.val * p.get(i+1, n, k-b).val, b);
+                    if (s > m)
+                        m = s;
+                //}
             }
+            p.set(i, n, k, m);
         }
+        //}
     }
+    //}
 
     print_solution_head(budget, n);
     //p.print(budget, budget);
