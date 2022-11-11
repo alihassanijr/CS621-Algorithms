@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
 #include <math.h>
+#include <limits>
+
+typedef std::numeric_limits< double > dbl;
 using namespace std;
 
 
@@ -38,8 +41,24 @@ class Problem
                 int c = cost[i-1];
                 for (int b=c; b <= budget; ++b){
                     int r = floor(b / c);
-                    set(i, i, r, 1 - pow((1-rel[i-1]), r));
+                    set(i, i, b, 1 - pow((1-rel[i-1]), r));
                 }
+            }
+        }
+        void print(int start, int end){
+            for (int k=start; k <= end; k++)
+            {
+                cout << k << endl;
+                cout << endl;
+                for (int i=1; i <= n; i++)
+                {
+                    for (int j=1; j <= n; j++)
+                        cout << get(i, j, k) << " ";
+                    cout << endl;
+                }
+                cout << endl;
+                cout << endl;
+
             }
         }
         double get(int i, int j, int k){
@@ -66,6 +85,7 @@ void print_solution_head(int budget, int n){
 }
 
 int main(){
+    cout.precision(dbl::max_digits10);
     //cout << "Machine Reliability Problem" << endl;
     int budget, n;
     cin >> budget;
@@ -85,25 +105,31 @@ int main(){
     Problem p(n, budget, cost, rel);
 
 
-    for (int i=1; i <= n; ++i){
-        for (int j=i+1; j <= n; ++j){
-            for (int k=cost[i]; k <= budget; ++k){
-                double m = 0;
-                for (int b=1; b <= k; ++b){
-                    double a = p.get(i, i, b) * p.get(i+1, j, k-b);
-                    double aa = p.get(j, j, b) * p.get(i, j-1, k-b);
-                    double c = max(a, aa);
-                    if (c > m)
-                        m = c;
+    for (int st=1; st <= n; ++st){
+        for (int i=1; i <= n; ++i){
+            int j = i + st;
+            if (j <= n){
+                for (int k=cost[i-1]; k <= budget; ++k){
+                    double m = 0;
+                    for (int b=1; b <= k; ++b){
+                        double a = p.get(i, i, b) * p.get(i+1, j, k-b);
+                        double aa = p.get(j, j, b) * p.get(i, j-1, k-b);
+                        double c = max(a, aa);
+                        if (c > m)
+                            m = c;
+                    }
+                    p.set(i, j, k, m);
                 }
-                p.set(i, j, k, m);
             }
         }
     }
 
     print_solution_head(budget, n);
+    //p.print(budget, budget);
 
     cout << "Iterated Version:" << endl;
-    cout << "Maximum reliability: " << p.get(1, n, budget) << endl;
+    cout << "Maximum reliability: ";
+    cout << p.get(1, n, budget);
+    cout << endl;
     return 0;
 }
