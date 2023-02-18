@@ -1,0 +1,126 @@
+\documentclass[12pt, letterpaper]{article}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{colortbl}
+\usepackage{listings}% http://ctan.org/pkg/listings
+\lstset{
+  basicstyle=\ttfamily,
+  mathescape
+}
+\newcommand{\dprime}{{\prime\prime}}
+
+\newcommand{\ptitle}{CS 621 - Assignment 6}
+\newcommand{\pauthor}{Ali Hassani}
+
+\title{\ptitle{}}
+\author{\pauthor{}}
+
+\pagestyle{fancyplain}
+\fancyhf{}
+\rhead{ \fancyplain{}{\pauthor{}} }
+\lhead{ \fancyplain{}{\ptitle{}} }
+
+\newcommand{\grayrow}{\rowcolor[gray]{.8}}
+
+
+\renewcommand{\thesubsection}{\thesection.\alph{subsection}}
+
+\begin{document}
+
+\maketitle
+
+\section{}
+
+Let \textsc{HamPath} be the following problem: Given an undirected graph $G$, does $G$ have a Hamilton path? 
+Recall that a Hamilton path is one that visits every node exactly once. 
+The \textsc{HamCycle} problem has the same input but is asking whether the graph has a Hamilton cycle.
+
+\begin{itemize}
+    \item Argue that both problems are in $NP$.
+    \item Show carefully that \textsc{HamCycle} $\leq^p_m$ \textsc{HamPath}.
+\end{itemize}
+
+\subsection*{Answer}
+
+\subsubsection*{Argue that both problems are in $NP$.}
+Given any graph $G=(V, E)$ with $|V| = n$ vertices, the length of any solution to $\textsc{HamCycle}$ is exactly $n$, and the length of any solution to $\textsc{HamCycle}$ is $n-1$.
+The upper bound for any of these two is $n^2$ (maximum number of possible edges).
+As a result, given a witness, the solution can be verified in polynomial time with respect to input size $n$.
+
+
+\subsubsection*{Show carefully that \textsc{HamCycle} $\leq^p_m$ \textsc{HamPath}.}
+Given any graph $G = (V, E)$, we define $f(.)$ as a function that constructs graph $f(G) = G^\prime = (V^\prime , E^\prime)$, where:
+\begin{align*}
+    V^\prime &= V \cap \{ x^\prime, y, y^\prime \} & \\
+    E^\prime &= E \cap  \{ \{ x^\prime, a \} \ | \ \{x, a\} \in E \} \cap \{ \{ y, x \} , \{ y^\prime , x^\prime \} \}
+\end{align*}
+and $x$ is the least-degree vertex in $G$.
+(Technically $x$ can be an arbitrary vertex, but specifying a property helps create a well-defined $f$.)
+The function $f$ takes graph $G$, cleaves vertex $x$ (clones it and its edges into a new vertex $x^\prime$), and adds two additional vertices $y$ and $y^\prime$, where there's an edge between $y$ and $x$, and another between $y^\prime$ and $x^\prime$.
+
+Through this definition, given any graph $G \in \textsc{HamCycle}$, we know that $G \in \textsc{HamPath}$ by definition (if a graph has a Hamilton cycle, it has a Hamilton path).
+Adding the three new vertices does not break that.
+
+\noindent \textbf{Proof:} Consider only the Hamilton cycle within the original graph $G$. $x$ and two edges connecting to it must be included in the cycle.
+Let's name the vertices on the other end of those two edges $p$ and $q$.
+Therefore $\{ x, p \}$ and $ \{ x, q \}$ are in the the cycle.
+Now when we introduce $x^\prime$ into the graph, we can simply swap one of those two edges with the corresponding $x^\prime$ one, and this breaks the cycle, and creates a path.
+Adding the two new vertices $y$ and $y^\prime$ only expands that path by two vertices.
+As a result, adding the three new vertices and their specified edges creates a graph with a Hamilton path, given that the original graph had a Hamilton cycle.
+
+\noindent Therefore, $G \in \textsc{HamCycle} \Longrightarrow{} f(G) \in \textsc{HamPath}$.
+
+Now assume that for some graph $G$, $f(G) \in \textsc{HamPath}$, but $G \notin \textsc{HamCycle}$.
+Given that assumption, we know the terminal vertices.
+It's the $y$ and $y^\prime$ that the function $f$ introduces.
+If we remove those two, we still have the cycle, and the terminal vertices are $x$ and $x^\prime$.
+If $x$ and $x^\prime$ are connected with an edge, we've constructed a Hamilton cycle.
+This is the same as removing $x^\prime$. If we remove $x^\prime$ however, we end up with the original graph, $G$.
+Therefore $G \in \textsc{HamCycle}$, and that is a contradiction.
+
+\noindent As a result, $f(G) \in \textsc{HamPath} \Longrightarrow{} G \in \textsc{HamCycle}$.
+
+Therefore, we can conclude that $G \in \textsc{HamCycle} \Longleftrightarrow{} f(G) \in \textsc{HamPath}$.
+
+\vspace{5mm}
+
+Therefore, \textsc{HamCycle} $\leq^p_m$ \textsc{HamPath}.
+
+\clearpage
+
+\appendix
+
+\section{Long answer to part 1}
+This was my original attempt in arguing both problems are in $NP$ by showing they reduce to $TSP$, and $TSP$ is in $NP$.
+
+\subsubsection*{Argue that both problems are in $NP$.}
+Consider the traveling salesman problem ($TSP$).
+$TSP$ is $NP$-complete, and therefore $TSP \in NP$.
+Based on the closure theorem, $NP$ is closed under $\leq^p_m$.
+Therefore, given any problem $A$ that poly time many-one reduces to $TSP$ ($A \leq^p_m TSP$), we can conclude that $A \in NP$.
+We claim that $\textsc{HamCycle} \leq^p_m TSP$:
+
+Given any graph $G=(V, E)$, we define $h(G)$ as a weighted graph with weight function $W$ so that given any two vertices $x$ and $y$ in $V$, $W(x, y) = 1$ IFF $\{x , y \} \in E$, and otherwise $W(x, y) = 0$.
+If $G \in \textsc{HamCycle}$, then $h(G) \in TSP$ with a path of exactly length $|V|$.
+If $h(G) \in TSP$, that would mean that there exists a cycle visiting all vertices exactly once by definition, therefore $G \in \textsc{HamCycle}$.
+
+As a result, $\textsc{HamCycle} \leq^p_m TSP$ is valid, therefore we can conclude that $\textsc{HamCycle} \in NP$.
+
+We also claim that $\textsc{HamPath} \leq^p_m \textsc{HamCycle}$, and if this claim is true, based on it and the fact that $\textsc{HamCycle} \leq^p_m TSP$, we can claim that $\textsc{HamPath} \leq^p_m TSP$.
+
+Given any graph $G = (V, E)$, we define $g(.)$ as a function that constructs graph $g(G) = (V^\prime , E^\prime)$, where:
+\begin{align*}
+    V^\prime &= V \cap \{ x \} & \\
+    E^\prime &= E \cap  \{ \{ x, a \} \ | \ a \in V \} \ .
+\end{align*}
+If graph $G$ has a Hamilton path from some vertex $a$ to another vertex $b$, adding $x$ and edges $\{ x , a \}$ and $\{ x , b \}$ turns it into a cycle, and because $x \notin G$, the cycle is Hamilton cycle in $g(G)$.
+If $g(G)$ does not have a Hamilton cycle, $G$ must also not have a Hamilton path. 
+If $g(G)$ didn't have a Hamilton cycle, but $G$ had a Hamilton path, and $p$ and $q$ were two endpoints, $g(G)$ would introduce $x$, and edges between $x$ and $p$ and $x$ and $q$, therefore $g(G)$ has a Hamilton cycle, which is a contradiction.
+
+Therefore $\textsc{HamPath} \leq^p_m \textsc{HamCycle}$, and as a result $\textsc{HamPath} \leq^p_m TSP$, and therefore $\textsc{HamPath} \in NP$.
+
+\end{document}

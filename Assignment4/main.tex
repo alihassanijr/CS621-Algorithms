@@ -1,0 +1,276 @@
+\documentclass[12pt, letterpaper]{article}
+\usepackage{fancyhdr}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathtools}
+\usepackage{colortbl}
+\usepackage{listings}% http://ctan.org/pkg/listings
+\lstset{
+  basicstyle=\ttfamily,
+  mathescape
+}
+\newcommand{\dprime}{{\prime\prime}}
+
+\newcommand{\ptitle}{CS 621 - Assignment 4}
+\newcommand{\pauthor}{Ali Hassani}
+
+\title{\ptitle{}}
+\author{\pauthor{}}
+
+\pagestyle{fancyplain}
+\fancyhf{}
+\rhead{ \fancyplain{}{\pauthor{}} }
+\lhead{ \fancyplain{}{\ptitle{}} }
+
+\newcommand{\grayrow}{\rowcolor[gray]{.8}}
+
+
+\renewcommand{\thesubsection}{\thesection.\alph{subsection}}
+
+\begin{document}
+
+\maketitle
+
+\section{Chapter 6, Exercise 6}
+In a word processor, the goal of ``pretty-printing'' is to take text with a ragged right margin, like this,
+\begin{verbatim}
+    Call me Ishmael.
+    Some years ago,
+    never mind how long precisely,
+    having little or no money in my purse,
+    and nothing particular to interest me on shore,
+    I thought I would sail about a little
+    and see the watery part of the world.
+\end{verbatim}
+and turn it into text whose right margin is as ``even'' as possible, like this.
+\begin{verbatim}
+    Call me Ishmael. Some years ago, never
+    mind how long precisely, having little
+    or no money in my purse, and nothing
+    particular to interest me on shore, I
+    thought I would sail about a little
+    and see the watery part of the world.
+\end{verbatim}
+
+To make this precise enough for us to start thinking about how to write a pretty-printer for text, we need to figure out what it means for the right margins to be ``even.'' 
+So suppose our text consists of a sequence of words, $W = { w_1, w_2, ..., w_n }$, where $w_i$ consists of $c_i$ characters. 
+We have a maximum line length of $L$. 
+We will assume we have a fixed-width font and ignore issues of punctuation or hyphenation.
+
+A formatting of $W$ consists of a partition of the words in $W$ into lines. 
+In the words assigned to a single line, there should be a space after each word except the last; and so if $w_j, w_{j+1}, ..., w_k$ are assigned to one line, then we should have
+\begin{equation*}
+    \left[ \sum_{i=j}^{k-1}{(c_i+1)} \right] + c_k \leq L .
+\end{equation*}
+
+We will call an assignment of words to a line \textit{valid} if it satisfies this inequality. 
+The difference between the left-hand side and the right-hand side will be called the \textit{slack} of the line—that is, the number of spaces left at the right margin.
+
+Give an efficient algorithm to find a partition of a set of words $W$ into valid lines, so that the sum of the squares of the slacks of all lines (including the last line) is minimized.
+
+
+% \clearpage
+\subsection*{Answer:}
+\vspace{5mm}
+\noindent\textbf{Subproblem:}
+
+\noindent$S(i, j)$ is the slack for a single line formed by $w_i, w_{i+1}, ..., w_j$ for nonnegative slacks, and $\infty$ for negative slacks (invalid assignment).
+It can be precomputed with $\mathcal{O}(n^3)$ and stored with $\mathcal{O}(n^2)$ space.
+
+\noindent$R(i)$ is sum of squares of slacks of all lines formed by partitioning $w_1, w_2, ..., w_i$, subject to all lines being valid.
+
+\vspace{5mm}
+\noindent\textbf{Recurrence:}
+\begin{equation*}
+    R(i) = 
+    \begin{cases}
+    0 & \text{if } i \leq 0 \\
+    S(1, 1)^2 & \text{if } i = 1 \\
+    \min_{j=1}^{i}{\left\{ R(j-1) + S(j, i)^2 \right\}} & \text{otherwise} \\
+    \end{cases}
+\end{equation*}
+
+\vspace{5mm}
+\noindent\textbf{Desired output:}
+$R(n)$.
+
+\clearpage
+\section{Chapter 6, Exercise 19}
+You're consulting for a group of people (who would prefer not to be mentioned here by name) whose jobs consist of monitoring and analyzing electronic signals coming from ships in coastal Atlantic waters. They want a fast algorithm for a basic primitive that arises frequently: ``untangling'' a superposition of two known signals. Specifically, they're picturing a situation in which each of two ships is emitting a short sequence of $0$s and $1$s over and over, and they want to make sure that the signal they're hearing is simply an interleaving of these two emissions, with nothing extra added in.
+
+This describes the whole problem; we can make it a little more explicit as follows. Given a string $x$ consisting of $0$s and $1$s, we write $x^k$ to denote $k$ copies of $x$ concatenated together. 
+We say that a string $x^\prime$ is a repetition of $x$ if it is a prefix of $x^k$ for some number $k$. So $x^\prime = 10110110110$ is a repetition of $x = 101$.
+
+We say that a string $s$ is an \textit{interleaving} of $x$ and $y$ if its symbols can be partitioned into two (not necessarily contiguous) subsequences $s^\prime$ and $s^\dprime$, so that $s^\prime$ is a repetition of $x$ and $s^\dprime$ is a repetition of $y$. (So each symbol in $s$ must belong to exactly one of $s^\prime$ or $s^\dprime$.) For example, if $x = 101$ and $y = 00$, then $s = 100010101$ is an interleaving of $x$ and $y$, since characters $1,2,5,7,8,9$ form $101101$—a repetition of $x$—and the remaining characters $3,4,6$ form $000$—a repetition of $y$.
+
+In terms of our application, $x$ and $y$ are the repeating sequences from the two ships, and $s$ is the signal we're listening to: We want to make sure $s$ ``unravels'' into simple repetitions of $x$ and $y$. 
+
+Give an efficient algorithm that takes strings $s$, $x$, and $y$ and decides if $s$ is an interleaving of $x$ and $y$.
+
+\clearpage
+\subsection*{Answer:}
+Given strings $s$, $x$, and $y$, where $s$ is of length $n$, we form $x^\prime$ and $y^\prime$ to be repetitions of $x$ and $y$ respectively, both of exactly length $n$.
+The definition of \textit{repetition} guarantees that only one such $x^\prime$ and $y^\prime$ exists.
+For any string $z$, we define $z[i]$ to be the $i$-th symbol in $z$ and $z[i:j]$ to be the $i$-th through $j$-th symbols (including $j$-th).
+
+\vspace{5mm}
+\noindent\textbf{Subproblem:}
+We define $R(i, j)$ to be \verb|True| IFF $s[1: i+j]$ is an interleaving of $x^\prime [1:i]$ and $y^\prime [1:j]$.
+
+\vspace{5mm}
+\noindent\textbf{Recurrence:}
+\begin{equation*}
+    R(i, j) = 
+    \begin{cases}
+    0 & \text{if } i \leq 0 \text{  OR  } j \leq 0 \\
+    s[1] == x^\prime [1] & \text{if } i = 1 \text{  AND  } j = 0 \\
+    s[1] == y^\prime [1] & \text{if } i = 0 \text{  AND  } j = 1 \\
+    % s[1] == x^\prime [1] \quad || \quad s[1] == y^\prime [1] & \text{if } i = 1 \text{  OR  } j = 1\\
+    &\\
+    \big( s[i+j] == x^\prime [i] \ \&\&\  R(i-1, j) \big) \ \  &\\
+    || \ \  \big( s[i+j] == y^\prime [j] \ \&\&\  R(i, j-1) \big) & \text{otherwise} \\
+    \end{cases}
+\end{equation*}
+
+\vspace{5mm}
+\noindent\textbf{Desired output:}
+If any $i$ and $j$ covers all of $s$ and results in a \verb|True| value, then $s$ is an interleaving of $x$ and $y$.
+
+$\max\limits_{i=1}^{n}{(R(i, n-i))}$ .
+
+\clearpage
+\section{(DPV) Chapter 6, Exercise 26}
+Consider the following version of the sequence alignment problem. 
+
+\noindent We have strings $X, Y \in \Sigma^{*}$, and the closeness of the alignment between $X = X_1 X_2 ... X_n$ and $Y = Y_1 Y_2 ... Y_m$ is determined by a scoring matrix $\delta$ of size $(|\Sigma| + 1) \times (|\Sigma| + 1)$, where the extra rows and columns are to accommodate gaps. 
+We define a subproblem $AS(i,j)$ (``alignment score'') as the score of the highest-scoring alignment of $X = X_1 X_2 ... X_i$ and $Y = Y_1 Y_2 ... Y_j$.
+
+\renewcommand{\theenumi}{\alph{enumi}}
+\begin{enumerate}
+    \item Give a recurrence for $AS(i,j)$.
+    \item What values assigned to $\delta$ describe the \textsc{Longest Common Subsequence} problem?
+    \item What values assigned to $\delta$ describe the \textsc{Edit Distance} problem?
+\end{enumerate}
+\renewcommand{\theenumi}{\arabic{enumi}}
+
+\subsection*{Answer:}
+\vspace{5mm}
+\noindent\textbf{(a) recurrence:}
+\begin{equation*}
+    AS(i, j) = 
+    \begin{cases}
+    0 & \text{if } i \leq 0 \text{  OR  } j \leq 0 \\
+    % \delta [X_i , -] & \text{if } i = 1 \text{  AND  } j = 0 \\
+    % \delta [- , Y_i] & \text{if } i = 0 \text{  AND  } j = 1 \\
+    % \delta [X_i , Y_i] & \text{if } i = 1 \text{  AND  } j = 1 \\
+    &\\
+    \max \big( R(i-1, j) ,  R(i, j-1) \big) + \delta [X_i , Y_i] & \text{otherwise} \\
+    \end{cases}
+\end{equation*}
+
+\noindent\textbf{(b) Longest Common Subsequence:}
+Delta should be set to the identity matrix, so that matched columns get a single point and unmatched ones get zero.
+In other words, for every $(a, b) \in \Sigma \times \Sigma$:
+\begin{equation*}
+    \delta [a, b] = 
+    \begin{cases}
+    1 & \text{if } a = b \\
+    0 & \text{if } a \neq b \\
+    \end{cases}
+\end{equation*}
+
+\noindent\textbf{(c) Edit Distance:}
+Assuming replace and remove have the same penalty:
+
+\noindent For every $(a, b) \in \Sigma \times \Sigma$:
+\begin{equation*}
+    \delta [a, b] = 
+    \begin{cases}
+    0 & \text{if } a = b \\
+    -1 & \text{if } a \neq b \\
+    \end{cases}
+\end{equation*}
+
+\clearpage
+\section{(DPV) Chapter 6, Exercise 6}
+We define a multiplication operation table on three symbols $a$, $b$, $c$ according to something like the table below, so that $ab = b$, $ca = a$, and so on. 
+The goal is to determine whether a string of symbols, $s_1 s_2 ... s_n$ ($s_i \in \{a, b, c\}$) can be parenthesized in such a way so that their multiplication together equals $a$. 
+Note that the operation is neither associative nor commutative (that is, it is possible that $ab \neq ba$ and $(ab)c \neq a(bc)$).
+
+\begin{table}[h!]
+    \centering
+    \caption{multiplication table for $a$, $b$, $c$}
+    \begin{tabular}{|l|c|c|c|}
+        \hline
+         & a & b & c \\
+        \hline
+        a & b & b & a \\
+        b & c & b & a \\
+        c & a & c & c \\
+        \hline
+    \end{tabular}
+\end{table}
+
+For example, if the input string is $bbbbac$ then the answer should be \textbf{true} since $((b(bb))(ba))c = a$. 
+\textit{Hint}: define a subproblem $P[i,j,t]$, where $1 \leq i \leq j \leq n$ and $t \in \{ a, b, c \}$. 
+$P[i,j,t]$ will be \textbf{true} if it is possible to parenthesize $s_i s_{i+1} ... s_j$ in such a way that the multiplication in that order equals the symbol $t$, and \textbf{false} otherwise.
+
+\subsection*{Answer:}
+
+\vspace{5mm}
+\noindent\textbf{Subproblem:}
+We define $P(i, j, t)$ to be \verb|True| only if it is possible to parenthesize $s_i s_{i+1} ... s_j$ in a way that it equals $t$.
+
+\vspace{5mm}
+\noindent\textbf{Recurrence:}
+\begin{equation*}
+    P(i, j, t) = 
+    \begin{cases}
+    False & \text{if } i > j \text{  OR  } i \leq 0 \\
+    s_i == t & \text{if } i = j \\
+    s_i s_{i+1} == t & \text{if } i = j - 1 \\
+    &\\
+    % \max_{r \in \{a, b, c \}}\big( P(i, j-1, r) s_j == t \big) & \text{otherwise } \\
+    \max\limits_{i \leq k < j}\max\limits_{\substack{p, q \in \{a, b, c \}\\p q == t}}\big( P(i, k, p) P(k+1, j, q) \big) & \text{otherwise } \\
+    \end{cases}
+\end{equation*}
+
+\vspace{5mm}
+\noindent\textbf{Desired output:}
+$P(1, n, a)$.
+
+\clearpage
+\section{Bones's Battery}
+Bones is investigating what electric shuttle is appropriate for his mom’s school district vehicle. Each school has a charging station. It is important that a trip from one school to any other be completed with no more than $K$ rechargings. The car is initially at zero battery and must always be recharged at the start of each trip; this counts as one of the $K$ rechargings. There is at most one road between each pair of schools, and there is at least one path of roads connecting each pair of schools. Given the layout of these roads and $K$, compute the necessary range required of the electric shuttle.
+
+\vspace{5mm}
+\noindent\textbf{Input}
+
+\noindent Input begins with a line with one integer $T$ ($1 \leq T \leq 50$) denoting the number of test cases. 
+Each test case begins with a line containing three integers $N$, $K$, and $M$ ($2 \leq N \leq 100$, $1 \leq K \leq 100$), where $N$ denotes the number of schools, $K$ denotes the maximum number of rechargings permitted per trip, and $M$ denotes the number of roads. 
+Next follow $M$ lines each with three integers $u_i$, $v_i$, and $d_i$ ($0 \leq u_i$, $v_i < N$, $u_i \neq v_i$, $1 \leq d_i \leq 10^9$) indicating that road $i$ connects schools $u_i$ and $v_i$ ($0$-indexed) bidirectionally with distance $d_i$.
+
+\subsection*{Answer:}
+
+\vspace{5mm}
+\noindent\textbf{Subproblem:}
+Define $D^k(i, j)$ to be the minimum distance between schools $i$ and $j$, with a maximum of $k$ intermediate schools.
+
+\vspace{5mm}
+\noindent\textbf{Recurrence:}
+\begin{equation*}
+    D_k(i, j) = 
+    \begin{cases}
+    \infty & \text{if no road between } (i, j) \text{ AND  } k = 0 \\
+    {dist}_{i,j} & \text{if road between } (i, j) \text{ AND  } k = 0 \\
+    \min \big( D_{k-1}(i, j), D_{k-1}(i, k) + D_{k-1}(k, j) \big) & \text{otherwise } \\
+    \end{cases}
+\end{equation*}
+
+\vspace{5mm}
+\noindent\textbf{Desired output:}
+$\max\limits_{i, j} D^K(i, j)$.
+
+\end{document}
